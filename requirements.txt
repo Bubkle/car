@@ -14,6 +14,7 @@ itsdangerous==0.24
 Jinja2==2.9.4
 Mako==1.0.6
 MarkupSafe==0.23
+PIL==1.1.7
 pkg-resources==0.0.0
 python-editor==1.0.3
 SQLAlchemy==1.1.4
