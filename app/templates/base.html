@@ -48,13 +48,7 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-   	 {% for message in get_flashed_messages() %}
- 	 <div class="alert alert-warning">
-        	<button type="button" class="close" data-dismiss="alert">&times;</button>
-	        {{ message }}
-	 </div>
-	 {% endfor %}
-    	 <div class="col-sm-3 col-md-2 sidebar">
+   	 <div class="col-sm-3 col-md-2 sidebar">
 	     <ul class="nav nav-sidebar">
 		<li class="active"><a href="#">上传车源</a></li>
                 <li><a href="#">待审车源</a></li>
@@ -63,6 +57,13 @@
 	     </ul>
 	 </div>
 	 <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+   	 	{% for message in get_flashed_messages() %}
+		<div class="alert alert-warning">
+        		<button type="button" class="close" data-dismiss="alert">&times;</button>
+	        	{{ message }}
+		 </div>
+		{% endfor %}
+		
 		{% block page_content %}{% endblock %}
 	 </div>
     </div>

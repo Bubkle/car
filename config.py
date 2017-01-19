@@ -5,7 +5,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 class Config:
 	SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard hard hard'
 	SQLALCHEMY_COMMIT_ON_TEARDOWN = True
-	UPLOADED_PHOTOS_DEST = os.path.join(os.environ['HOME'], 'photos')
+	UPLOADED_CAR_DEST = os.path.join(os.environ['HOME'], 'photos/car')
 
 	@staticmethod
 	def init_app(app):

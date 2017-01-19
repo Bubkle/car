@@ -1,10 +1,36 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %} 
-{% block title %}Flasky - Upload{% endblock %} 
+{% block title %}Flasky - Upload{% endblock %}
+{% block head %} 
+{{ super() }}
+<link rel="stylesheet" href="//cdn.bootcss.com/bootstrap-fileinput/4.3.6/css/fileinput.min.css">
+{% endblock %}
 {% block page_content %}
 <h1 class="page-header">上传</h1>
-<div class="col-md-4">
+<div class="col-md-6">
 	{{ wtf.quick_form(form) }}
 </div>
 {% endblock %}
+{% block scripts  %}
+{{ super() }}
+<script src="//cdn.bootcss.com/bootstrap-fileinput/4.3.6/js/fileinput.min.js"></script>
+<script>
+//初始化fileinput控件（第一次初始化）
+function initFileInput(ctrlName) {    
+    var control = $('#' + ctrlName); 
 
+    control.fileinput({
+        language: 'zh', //设置语言
+        allowedFileExtensions : ['jpg', 'png','gif'],//接收的文件后缀
+	maxFileCount: 30, //文件数量
+	dropZoneEnabled: true, //是否显示拖拽区域
+        showUpload: false, //是否显示上传按钮
+        showCaption: true,//是否显示标题
+        browseClass: "btn btn-primary", //按钮样式             
+        previewFileIcon: "<i class='glyphicon glyphicon-king'></i>", 
+    });
+}
+//初始化fileinput控件（第一次初始化）
+    initFileInput("image");
+</script>
+{% endblock %}

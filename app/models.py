@@ -54,4 +54,9 @@ class Car(db.Model):
 	owner_type = db.Column(db.String(64))
 	owner_id = db.Column(db.Integer)
 	current_state = db.Column(db.String(64))
-	
+
+class Car_Pictures(db.Model):
+	__tablename__= 'car_pictures'
+	id = db.Column(db.Integer, primary_key=True)
+	car_id = db.Column(db.Integer, nullable=False)
+	url = db.Column(db.Text, nullable=False)
