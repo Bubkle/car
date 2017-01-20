@@ -3,6 +3,8 @@ import os
 import datetime, time, random
 import imghdr
 import hashlib
+from .. import db
+from ..models import Pictures
 
 def get_md5(src):
 	md5 = hashlib.md5()
@@ -41,16 +43,25 @@ def cut(picture_urls, car_id):
 		main = img.resize((290, 194))
 		save_path = get_save_path('main', base_url, url)
 		main.save(save_path)
+		picture = Pictures(car_id=car_id, url=os.path.relpath(save_path, os.environ['HOME']), picture_type='main')
+		db.session.add(picture)
+		db.session.commit()
 		break
 	for url in picture_urls:
 		img = Image.open(url)
 		big = img.resize((620,430))
 		save_path = get_save_path('big', base_url, url)
 		big.save(save_path)
+		picture = Pictures(car_id=car_id, url=os.path.relpath(save_path, os.environ['HOME']), picture_type='big')
+		db.session.add(picture)
+		db.session.commit()
 	for url in picture_urls:
 		img = Image.open(url)
 		thumb = img.resize((90,60))
 		save_path = get_save_path('thumb', base_url, url)
-		thumb.save(save_path)
+		thumb.save(save_path)	
+		picture = Pictures(car_id=car_id, url=os.path.relpath(save_path, os.environ['HOME']), picture_type='thumb')
+		db.session.add(picture)
+		db.session.commit()
 	for url in picture_urls:
 		os.remove(url)

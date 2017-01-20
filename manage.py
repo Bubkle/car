@@ -2,7 +2,7 @@
 
 import os
 from app import create_app, db
-from app.models import Staff
+from app.models import Staff, Pictures
 from flask_script import Manager, Shell
 from flask_migrate import Migrate, MigrateCommand
 
@@ -10,7 +10,7 @@ app = create_app(os.getenv('MY_CONFIG') or 'default')
 manager = Manager(app)
 
 def make_shell_context():
-	return dict(app=app, db=db, Staff=Staff)
+	return dict(app=app, db=db, Staff=Staff, Pictures=Pictures)
 manager.add_command("shell", Shell(make_context=make_shell_context))
 manager.add_command("db", MigrateCommand)
 

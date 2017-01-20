@@ -14,6 +14,9 @@ login_manager.session_protection = 'strong'
 login_manager.login_view = 'auth.login'
 
 car = UploadSet('car', IMAGES)
+driving = UploadSet('driving', IMAGES)
+registration = UploadSet('registration', IMAGES)
+frame = UploadSet('frame', IMAGES)
 
 def create_app(config_name):
 	app = Flask(__name__)
@@ -26,6 +29,9 @@ def create_app(config_name):
 	login_manager.init_app(app)
 
 	configure_uploads(app, car)
+	configure_uploads(app, driving)
+	configure_uploads(app, registration)
+	configure_uploads(app, frame)
 	patch_request_class(app)
 
 	from .main import main as main_blueprint
