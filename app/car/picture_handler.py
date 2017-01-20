@@ -1,9 +1,17 @@
-import Image
+from PIL import Image
 import os
 import datetime, time, random
+import imghdr
+import hashlib
+
+def get_md5(src):
+	md5 = hashlib.md5()
+	md5.update(src)
+	md5_digest = md5.hexdigest()
+	return md5_digest
 
 
-def get_save_path(picture_type):
+def get_save_path(picture_type, base_url, url):
 	date = datetime.date.today()
 	date = datetime.datetime(date.year, date.month, date.day, 0, 0)
 	time_stamp = time.mktime(date.timetuple())
@@ -18,7 +26,12 @@ def get_save_path(picture_type):
 	path = os.path.join(str(time_stamp), folder)
 	num = random.randint(0, 99)
 	sub_folder = os.path.join(path, str(num))
-	return sub_folder
+	save_path = os.path.join(base_url, sub_folder)
+	if not (os.path.exists(save_path) and os.path.isdir(save_path)):
+		os.makedirs(save_path)
+	name = get_md5(url) + '.' + imghdr.what(url)
+	save_path = os.path.join(save_path, name)
+	return save_path
 
 def cut(picture_urls, car_id):
 	base_url = os.path.join(os.environ['HOME'], 'photos')
@@ -26,7 +39,18 @@ def cut(picture_urls, car_id):
 	for url in picture_urls:
 		img = Image.open(url)
 		main = img.resize((290, 194))
-		save_path = get_save_path('main')
-		save_path = os.path.join(base_url, save_path)
+		save_path = get_save_path('main', base_url, url)
 		main.save(save_path)
-	
+		break
+	for url in picture_urls:
+		img = Image.open(url)
+		big = img.resize((620,430))
+		save_path = get_save_path('big', base_url, url)
+		big.save(save_path)
+	for url in picture_urls:
+		img = Image.open(url)
+		thumb = img.resize((90,60))
+		save_path = get_save_path('thumb', base_url, url)
+		thumb.save(save_path)
+	for url in picture_urls:
+		os.remove(url)
