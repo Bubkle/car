@@ -52,6 +52,7 @@ class Car(db.Model):
 	age_of_car = db.Column(db.Integer)
 	owner_type = db.Column(db.String(64), nullable=True)
 	owner_id = db.Column(db.Integer, nullable=True)
+	submition_date = db.Column(db.Date, nullable=False)
 	current_state = db.Column(db.String(64), nullable=False)
 
 class Pictures(db.Model):

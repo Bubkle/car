@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
 
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, jsonify
 from . import car
 from .picture_handler import cut
 from .. import db
@@ -54,6 +54,11 @@ def save_picture(car_image, driving_image, registration_image, frame_image, car_
 	db.session.add_all([driving, registration, frame])
 	db.session.commit()
 
+def dump_datetime(value):
+    if value is None:
+        return None
+    return value.strftime("%Y-%m-%d")
+
 @car.route('/upload', methods=['GET', 'POST'])
 def upload():
 	form = UploadCar()
@@ -74,6 +79,7 @@ def upload():
 		data['number_of_seats'] = form.number_of_seats.data
 		data['age_of_car'] = form.age_of_car.data
 		data['current_state'] = u'待审核'
+		data['submition_date'] = datetime.date.today() 
 		new_car = Car(**data)
 		db.session.add(new_car)
 		db.session.commit()
@@ -81,3 +87,24 @@ def upload():
 		flash(u'提交成功')
 		return redirect(url_for('.upload'))
 	return render_template('car/upload.html', form=form)
+
+@car.route('/review')
+def review():
+	return render_template('car/review.html')
+
+@car.route('/review/get_car')
+def get_car():
+	result = Car.query.all()
+	data = []
+	for item in result:
+		data.append({
+			'brand': item.brand,
+			'model': item.model,
+			'price': item.price,
+			'owner': u'一汽',
+			'phone': '1234567890',
+			'licensing_date': item.first_licensing_date.strftime("%Y-%m-%d"),
+			'submition_date': item.submition_date.strftime("%Y-%m-%d"),
+		})
+	json = {'total': len(result), 'rows': data}
+	return jsonify(json)
