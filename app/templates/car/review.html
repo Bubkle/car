@@ -26,6 +26,24 @@
 
 <div class="col-md-6">
 	{{ wtf.quick_form(form) }}
+	<div>
+	<center>
+	<button type="button" class="btn btn-success" onclick="pass({{ car_id }})">通过</button>
+	<button type="button" class="btn btn-danger">拒绝</button>
+	</center>
+	</div>
+</div>
+<div id="mymodal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+        <div class="modal-body">
+            <p>操作成功</p>
+        </div>
+        <div class="modal-footer">
+           <button type="button" class="btn btn-primary">确定</button>
+        </div>
+    </div>
+  </div>
 </div>
 {% endif %}
 {% endblock %}
@@ -186,6 +204,34 @@ function initFileInput(ctrlName) {
     initFileInput("registration_image");
     initFileInput("driving_image");
     initFileInput("frame_image");
+</script>
+<script>
+var state = -1;
+var pass = function(car_id){
+        $.ajax({
+            url: "/car/review/pass",
+            data: {"car_id": car_id},
+            type: "POST",
+            dataType:"text",
+            success: function(data) {
+                json = eval("("+data+")");
+		state = json.state;
+                if(json.state === 0){
+                    $('#mymodal').modal();
+                }
+		else{
+		   alert("失败");
+		}
+            }
+        });
+        return false;
+    };
+
+$('#mymodal').on('hidden.bs.modal', function () {
+   if(state === 0){
+	window.location.href = '/car/review/list'
+   }
+})
 </script>
 {% endif %}
 {% endblock %}

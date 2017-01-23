@@ -5,7 +5,7 @@ from . import car
 from .picture_handler import cut
 from .. import db
 from ..models import Car, Pictures
-from .forms import UploadCar
+from .forms import UploadCar, ReviewCar
 from flask_uploads import UploadSet, IMAGES
 from wtforms import SubmitField
 import time
@@ -94,8 +94,23 @@ def review(view_type):
 	if view_type == 'list':
 		return render_template('car/review.html', list=True)
 	else:
-		form = UploadCar()
-		return render_template('car/review.html', list=False, form=form)
+		form = ReviewCar()
+		result = Car.query.all()[0]
+		form.brand.data = result.brand
+		form.model.data = result.model
+		form.color.data = result.color
+		form.description.data = result.description
+		form.frame_number.data = result.frame_number
+		form.price.data = result.price
+		form.first_licensing_date.data = result.first_licensing_date
+		form.first_licensing_place.data = result.first_licensing_place
+		form.mileage.data = result.mileage
+		form.type_of_gearbox.data = result.type_of_gearbox
+		form.emission_standard.data = result.emission_standard
+		form.displacement.data = result.displacement
+		form.number_of_seats.data = result.number_of_seats
+		form.age_of_car.data = result.age_of_car
+		return render_template('car/review.html', list=False, form=form, car_id=result.id)
 
 @car.route('/review/get_car')
 def get_car():
@@ -113,3 +128,8 @@ def get_car():
 		})
 	json = {'total': len(result), 'rows': data}
 	return jsonify(json)
+
+@car.route('/review/pass', methods=['GET', 'POST'])
+def review_pass():
+	request.values.get('car_id', 0)
+	return jsonify({"state": 0})
