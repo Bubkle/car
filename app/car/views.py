@@ -7,6 +7,7 @@ from .. import db
 from ..models import Car, Pictures
 from .forms import UploadCar
 from flask_uploads import UploadSet, IMAGES
+from wtforms import SubmitField
 import time
 import datetime
 import random
@@ -88,9 +89,13 @@ def upload():
 		return redirect(url_for('.upload'))
 	return render_template('car/upload.html', form=form)
 
-@car.route('/review')
-def review():
-	return render_template('car/review.html')
+@car.route('/review/<view_type>')
+def review(view_type):
+	if view_type == 'list':
+		return render_template('car/review.html', list=True)
+	else:
+		form = UploadCar()
+		return render_template('car/review.html', list=False, form=form)
 
 @car.route('/review/get_car')
 def get_car():

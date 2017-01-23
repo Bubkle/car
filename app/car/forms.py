@@ -22,4 +22,4 @@ class UploadCar(Form):
 	registration_image = FileField(u'机动车登记证', validators=[Required(),])
 	driving_image = FileField(u'行驶证', validators=[Required(),])
 	frame_image = FileField(u'车架码证', validators=[Required(),])
-	submit = SubmitField(u'提交')
+
