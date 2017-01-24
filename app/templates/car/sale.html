@@ -40,7 +40,7 @@
 </div>
 {% else %}
 <ol class="breadcrumb">
-  <li><a href="#">在售列表</a></li>
+  <li><a href="/car/sale/list/">在售列表</a></li>
   <li class="active">车辆</li>
 </ol>
 
@@ -49,6 +49,19 @@
 </div>
 {% endif %}
 {% endblock %}
+<div id="mymodal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+  <div class="modal-dialog modal-sm" role="document">
+    <div class="modal-content">
+        <div class="modal-body">
+            <p>操作成功</p>
+        </div>
+        <div class="modal-footer">
+           <button type="button" class="btn btn-primary">确定</button>
+        </div>
+    </div>
+  </div>
+</div>
+
 {% block scripts  %}
 {{ super() }}
 {% if list %}
@@ -112,6 +125,10 @@ var TableInit = function (table_id) {
             cardView: false,                    //是否显示详细视图
             detailView: false,                   //是否显示父子表
             columns: [{
+		field: 'car_id',
+		title: '车辆ID',
+		align: 'center',
+	    },{
                 field: 'brand',
                 title: '品牌',
 		align: 'center',
@@ -164,7 +181,7 @@ var TableInit = function (table_id) {
 
 function operateFormatter_on_sale(value, row, index) {
         return [
-            '<a class="edit" href="/car/sale/details/2/" title="编辑信息">',
+            '<a class="edit" href="/car/sale/details/' + row.car_id + '/" title="编辑信息">',
             '编辑 | ',
             '</a>  ',
             '<a class="sold" href="#" title="置为已售">',
@@ -197,10 +214,26 @@ function operateFormatter_delete(value, row, index) {
         ].join('');
 };
 
+var state = -1;
 
 window.operateEvents = {
         'click .sold': function (e, value, row, index) {
-            alert('You click review action, row: ' + JSON.stringify(row));
+        	$.ajax({
+	            url: "/car/sale/sold/",
+        	    data: {"car_id": row.car_id},
+	            type: "POST",
+        	    dataType:"text",
+	            success: function(data) {
+        	        json = eval("("+data+")");
+			state = json.state;
+        	        if(json.state === 0){
+                	    $('#mymodal').modal();
+	                }
+			else{
+			   alert("失败");
+			}
+	            }
+	        });    
         },
         'click .remove': function (e, value, row, index) {
             $table.bootstrapTable('remove', {
@@ -209,6 +242,13 @@ window.operateEvents = {
             });
         }
 };
+
+$('#mymodal').on('hidden.bs.modal', function () {
+   if(state === 0){
+	window.location.href = '/car/sale/list/'
+   }
+})
+
 </script>
 {% else %}
 <script src="//cdn.bootcss.com/bootstrap-fileinput/4.3.6/js/fileinput.min.js"></script>

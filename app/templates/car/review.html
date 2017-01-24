@@ -45,7 +45,7 @@
 	<div>
 	<center>
 	<button type="button" class="btn btn-success" onclick="pass({{ car_id }})">通过</button>
-	<button type="button" class="btn btn-danger">拒绝</button>
+	<button type="button" class="btn btn-danger" onclick="reject({{ car_id }})">拒绝</button>
 	</center>
 	</div>
 	{% endif %}
@@ -113,8 +113,8 @@ var TableInit = function (table_id) {
             cardView: false,                    //是否显示详细视图
             detailView: false,                   //是否显示父子表
             columns: [{
-		field: 'id',
-		title: 'ID',
+		field: 'car_id',
+		title: '车辆ID',
 		align: 'center',
 	    },{
                 field: 'brand',
@@ -169,7 +169,7 @@ var TableInit = function (table_id) {
 
 function operateFormatter_review(value, row, index) {
         return [
-            '<a class="review" href="/car/review/details/' + row.id + '/" title="审核车辆信息">',
+            '<a class="review" href="/car/review/details/' + row.car_id + '/" title="审核车辆信息">',
             '审核',
             '</a>  ',
         ].join('');
@@ -177,7 +177,7 @@ function operateFormatter_review(value, row, index) {
 
 function operateFormatter_reject(value, row, index) {
         return [
-            '<a class="check" href="/car/review/details/' + row.id +  '/" title="查看车辆信息">',
+            '<a class="check" href="/car/review/details/' + row.car_id +  '/" title="查看车辆信息">',
             '查看',
             '</a>  ',
         ].join('');
@@ -224,7 +224,27 @@ function initFileInput(ctrlName) {
 var state = -1;
 var pass = function(car_id){
         $.ajax({
-            url: "/car/review/pass",
+            url: "/car/review/pass/",
+            data: {"car_id": car_id},
+            type: "POST",
+            dataType:"text",
+            success: function(data) {
+                json = eval("("+data+")");
+		state = json.state;
+                if(json.state === 0){
+                    $('#mymodal').modal();
+                }
+		else{
+		   alert("失败");
+		}
+            }
+        });
+        return false;
+    };
+
+var reject = function(car_id){
+        $.ajax({
+            url: "/car/review/reject/",
             data: {"car_id": car_id},
             type: "POST",
             dataType:"text",

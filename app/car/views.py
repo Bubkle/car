@@ -63,6 +63,7 @@ def dump_datetime(value):
 
 def save_car(form, db, request, car_id=''):	
 	data = {}
+	old_car = None
 	if car_id:
 		old_car = Car.query.filter_by(id=int(car_id))
 		if not old_car:
@@ -81,7 +82,8 @@ def save_car(form, db, request, car_id=''):
 	data['displacement'] = form.displacement.data
 	data['number_of_seats'] = form.number_of_seats.data
 	data['age_of_car'] = form.age_of_car.data
-	data['current_state'] = u'出售中'
+	if not old_car:
+		data['current_state'] = u'待审核'
 	data['submition_date'] = datetime.date.today()
 	if old_car:
 		old_car.update(data)
@@ -115,7 +117,7 @@ def review_detail(car_id):
 	result = Car.query.filter_by(id=car_id).first()
 	if not result:
 		return render_template('404.html'), 404
-	if result.current_state not in ["待审核", "已拒绝"]:
+	if result.current_state not in [u"待审核", u"已拒绝"]:
 		return render_template('404.html'), 404
 	form.brand.data = result.brand
 	form.model.data = result.model
@@ -144,7 +146,7 @@ def get_car(list_type):
 	data = []
 	for item in result:
 		data.append({
-			'id': item.id,
+			'car_id': item.id,
 			'brand': item.brand,
 			'model': item.model,
 			'price': item.price,
@@ -164,10 +166,10 @@ def review_pass():
 	review_car = Car.query.filter_by(id=car_id).first()
 	if not review_car:
 		return jsonify({"state": 2})
-	if review_car.current_state != "待审核":
+	if review_car.current_state != u"待审核":
 		return jsonify({"state": 3})
 	else:
-		review_car.current_state = "出售中"
+		review_car.current_state = u"出售中"
 		db.session.commit()
 		return jsonify({"state": 0})
 
@@ -179,10 +181,10 @@ def review_reject():
 	review_car = Car.query.filter_by(id=car_id).first()
 	if not review_car:
 		return jsonify({"state": 2})
-	if review_car.current_state != "待审核":
+	if review_car.current_state != u"待审核":
 		return jsonify({"state": 3})
 	else:
-		review_car.current_state = "已拒绝"
+		review_car.current_state = u"已拒绝"
 		db.session.add(review_car)
 		db.session.commit()
 		return jsonify({"state": 0})
@@ -236,6 +238,7 @@ def sale_car(list_type):
 	data = []
 	for item in result:
 		data.append({
+			'car_id': item.id,
 			'brand': item.brand,
 			'model': item.model,
 			'price': item.price,
@@ -247,7 +250,7 @@ def sale_car(list_type):
 	json = {'total': len(result), 'rows': data}
 	return jsonify(json)
 
-@car.route('sale/on_sale/')
+@car.route('/sale/on_sale/', methods=['GET', 'POST'])
 def sale_on_sale():
 	car_id = request.values.get('car_id')
 	if not car_id:
@@ -255,14 +258,14 @@ def sale_on_sale():
 	sale_car = Car.query.filter_by(id=car_id).first()
 	if not sale_car:
 		return jsonify({"state": 2})
-	if sale_car.current_state != "已售出":
+	if sale_car.current_state != u"已售出":
 		return jsonify({"state": 3})
 	else:
-		review_car.current_state = "出售中"
+		review_car.current_state = u"出售中"
 		db.session.commit()
 		return jsonify({"state": 0})
 
-@car.route('sale/delete')
+@car.route('/sale/delete/', methods=['GET', 'POST'])
 def sale_delete():
 	car_id = request.values.get('car_id')
 	if not car_id:
@@ -270,10 +273,25 @@ def sale_delete():
 	sale_car = Car.query.filter_by(id=car_id).first()
 	if not sale_car:
 		return jsonify({"state": 2})
-	if sale_car.current_state not in ["已售出", "出售中"]:
+	if sale_car.current_state not in [u"已售出", u"出售中"]:
 		return jsonify({"state": 3})
 	else:
-		review_car.current_state = "已删除"
+		review_car.current_state = u"已删除"
+		db.session.commit()
+		return jsonify({"state": 0})
+
+@car.route('/sale/sold/', methods=['GET', 'POST'])
+def sale_sold():
+	car_id = request.values.get('car_id')
+	if not car_id:
+		return jsonify({"state": 1})
+	sale_car = Car.query.filter_by(id=car_id).first()
+	if not sale_car:
+		return jsonify({"state": 2})
+	if sale_car.current_state != u"出售中":
+		return jsonify({"state": 3})
+	else:
+		sale_car.current_state = u"已售出"
 		db.session.commit()
 		return jsonify({"state": 0})
 
