@@ -1,6 +1,6 @@
 {% extends "car/car_base.html" %}
 {% import "bootstrap/wtf.html" as wtf %} 
-{% block title %}审核车源{% endblock %}
+{% block title %}在售车源{% endblock %}
 {% block head %} 
 {{ super() }}
 {% if list %}
@@ -10,60 +10,43 @@
 {% endif %}
 {% endblock %}
 {% block page_content %}
-<h1 class="page-header">审核车源</h1>
+<h1 class="page-header">在售车源</h1>
 {% if list %}
 <div class="col-md-12">
     <div class="panel-body" style="padding-bottom:0px;">
 	<ul id="myTab" class="nav nav-tabs">
             <li class="active">
-		<a href="#review" data-toggle="tab">待审核</a>
+		<a href="#on_sale" data-toggle="tab">在售</a>
    	    </li>
             <li>
-		<a href="#reject" data-toggle="tab">已拒绝</a>
+		<a href="#sold" data-toggle="tab">已售</a>
+	    </li>
+            <li>
+		<a href="#delete" data-toggle="tab">已删</a>
 	    </li>
         </ul>
 	<div id="myTabContent" class="tab-content">
-	    <div class="tab-pane fade in active" id="review"> 
-	    	 <table id="tb_car_review"></table>
+	    <div class="tab-pane fade in active" id="on_sale"> 
+	    	 <table id="tb_car_on_sale"></table>
 	    </div>
-	    <div class="tab-pane fade" id="reject"> 
-	    	 <table id="tb_car_reject"></table>
+	    <div class="tab-pane fade" id="sold"> 
+	    	 <table id="tb_car_sold"></table>
 	    </div>
-
+	    <div class="tab-pane fade" id="delete"> 
+	    	 <table id="tb_car_delete"></table>
+	    </div>
 	</div>
     </div>
 </div>
 {% else %}
 <ol class="breadcrumb">
-  <li><a href="#">审核列表</a></li>
+  <li><a href="#">在售列表</a></li>
   <li class="active">车辆</li>
 </ol>
 
 <div class="col-md-6">
 	{{ wtf.quick_form(form) }}
-	{% if current_state == "待审核" %}
-	<div>
-	<center>
-	<button type="button" class="btn btn-success" onclick="pass({{ car_id }})">通过</button>
-	<button type="button" class="btn btn-danger">拒绝</button>
-	</center>
-	</div>
-	{% endif %}
 </div>
-{% if current_state == "待审核" %}
-<div id="mymodal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
-  <div class="modal-dialog modal-sm" role="document">
-    <div class="modal-content">
-        <div class="modal-body">
-            <p>操作成功</p>
-        </div>
-        <div class="modal-footer">
-           <button type="button" class="btn btn-primary">确定</button>
-        </div>
-    </div>
-  </div>
-</div>
-{% endif %}
 {% endif %}
 {% endblock %}
 {% block scripts  %}
@@ -74,21 +57,23 @@
 <script>
 $(function () {
 
-    //初始化Table
-    var table_review = new TableInit("tb_car_review");
-    table_review.Init();
-    var table_reject = new TableInit("tb_car_reject");
-    table_reject.Init();
+    //1.初始化Table
+    var oTable = new TableInit();
+    oTable.Init();
+
+    //2.初始化Button的点击事件
+    var oButtonInit = new ButtonInit();
+    oButtonInit.Init();
+
 });
 
 
-var TableInit = function (table_id) {
+var TableInit = function () {
     var oTableInit = new Object();
     //初始化Table
-    table = document.getElementById(table_id);
     oTableInit.Init = function () {
-        $(table).bootstrapTable({
-            url: table_id === "tb_car_review" ? '/car/review/get_list/review/' : '/car/review/get_list/reject/',  //请求后台的URL（*）
+        $('#tb_car_on_sale').bootstrapTable({
+            url: '/car/review/get_car',                    //请求后台的URL（*）
             method: 'get',                      //请求方式（*）
             toolbar: '#toolbar',                //工具按钮用哪个容器
             striped: true,                      //是否显示行间隔色
@@ -145,7 +130,7 @@ var TableInit = function (table_id) {
                 title: '操作',
                 align: 'center',
                 events: operateEvents,
-                formatter: table_id === "tb_car_review" ? operateFormatter_review : operateFormatter_reject,
+                formatter: operateFormatter
             },]
         });
     };
@@ -163,34 +148,32 @@ var TableInit = function (table_id) {
     return oTableInit;
 };
 
-function operateFormatter_review(value, row, index) {
+function operateFormatter(value, row, index) {
         return [
-            '<a class="review" href="/car/review/details/0/" title="审核车辆信息">',
-            '审核',
+            '<a class="edit" href="javascript:void(0)" title="编辑信息">',
+            '编辑 | ',
             '</a>  ',
+            '<a class="sold" href="javascript:void(0)" title="置为已售">',
+            '已售 | ',
+            '</a>',
+            '<a class="remove" href="javascript:void(0)" title="删除车辆">',
+            '删除',
+            '</a>'
+
         ].join('');
-};
+    }
 
-function operateFormatter_reject(value, row, index) {
-        return [
-            '<a class="check" href="" title="查看车辆信息">',
-            '查看',
-            '</a>  ',
-        ].join('');
-};
-
-
-window.operateEvents = {/*
+    window.operateEvents = {
         'click .review': function (e, value, row, index) {
             alert('You click review action, row: ' + JSON.stringify(row));
         },
-        'click .check': function (e, value, row, index) {
+        'click .remove': function (e, value, row, index) {
             $table.bootstrapTable('remove', {
                 field: 'id',
                 values: [row.id]
             });
-        }*/
-};
+        }
+    };
 </script>
 {% else %}
 <script src="//cdn.bootcss.com/bootstrap-fileinput/4.3.6/js/fileinput.min.js"></script>
@@ -217,37 +200,8 @@ function initFileInput(ctrlName) {
     initFileInput("frame_image");
 </script>
 <script>
-var state = -1;
-var pass = function(car_id){
-        $.ajax({
-            url: "/car/review/pass",
-            data: {"car_id": car_id},
-            type: "POST",
-            dataType:"text",
-            success: function(data) {
-                json = eval("("+data+")");
-		state = json.state;
-                if(json.state === 0){
-                    $('#mymodal').modal();
-                }
-		else{
-		   alert("失败");
-		}
-            }
-        });
-        return false;
-    };
-
-$('#mymodal').on('hidden.bs.modal', function () {
-   if(state === 0){
-	window.location.href = '/car/review/list'
-   }
-})
-</script>
-{% endif %}
-<script>
-nav = document.getElementById("nav_review");
+nav = document.getElementById("nav_sale");
 nav.setAttribute("class", "active");
 </script>
+{% endif %}
 {% endblock %}
-

@@ -60,7 +60,7 @@ def dump_datetime(value):
         return None
     return value.strftime("%Y-%m-%d")
 
-@car.route('/upload', methods=['GET', 'POST'])
+@car.route('/upload/', methods=['GET', 'POST'])
 def upload():
 	form = UploadCar()
 	if form.validate_on_submit():
@@ -89,32 +89,40 @@ def upload():
 		return redirect(url_for('.upload'))
 	return render_template('car/upload.html', form=form)
 
-@car.route('/review/<view_type>')
-def review(view_type):
-	if view_type == 'list':
-		return render_template('car/review.html', list=True)
-	else:
-		form = ReviewCar()
-		result = Car.query.all()[0]
-		form.brand.data = result.brand
-		form.model.data = result.model
-		form.color.data = result.color
-		form.description.data = result.description
-		form.frame_number.data = result.frame_number
-		form.price.data = result.price
-		form.first_licensing_date.data = result.first_licensing_date
-		form.first_licensing_place.data = result.first_licensing_place
-		form.mileage.data = result.mileage
-		form.type_of_gearbox.data = result.type_of_gearbox
-		form.emission_standard.data = result.emission_standard
-		form.displacement.data = result.displacement
-		form.number_of_seats.data = result.number_of_seats
-		form.age_of_car.data = result.age_of_car
-		return render_template('car/review.html', list=False, form=form, car_id=result.id)
+@car.route('/review/list/')
+def review_list():
+	return render_template('car/review.html', list=True)
 
-@car.route('/review/get_car')
-def get_car():
-	result = Car.query.all()
+@car.route('/review/details/<car_id>/')
+def review_detail(car_id):
+	if not car_id:
+		return render_template('404.html'), 404
+	form = ReviewCar()
+	result = Car.query.all()[0]
+	form.brand.data = result.brand
+	form.model.data = result.model
+	form.color.data = result.color
+	form.description.data = result.description
+	form.frame_number.data = result.frame_number
+	form.price.data = result.price
+	form.first_licensing_date.data = result.first_licensing_date
+	form.first_licensing_place.data = result.first_licensing_place
+	form.mileage.data = result.mileage
+	form.type_of_gearbox.data = result.type_of_gearbox
+	form.emission_standard.data = result.emission_standard
+	form.displacement.data = result.displacement
+	form.number_of_seats.data = result.number_of_seats
+	form.age_of_car.data = result.age_of_car
+	return render_template('car/review.html', list=False, form=form, current_state=result.current_state, car_id=result.id)
+
+@car.route('/review/get_list/<list_type>/')
+def get_car(list_type):
+	if list_type == "review":
+		result = Car.query.filter_by(current_state=u"待审核").all()
+	elif list_type == "reject":
+		result = Car.query.filter_by(current_state=u"已拒绝").all()
+	else:
+		return jsonify({'state': -1})
 	data = []
 	for item in result:
 		data.append({
@@ -131,5 +139,84 @@ def get_car():
 
 @car.route('/review/pass', methods=['GET', 'POST'])
 def review_pass():
-	request.values.get('car_id', 0)
-	return jsonify({"state": 0})
+	car_id = request.values.get('car_id')
+	if not car_id:
+		return jsonify({"state": 1})
+	review_car = Car.query.filter_by(car_id=car_id).first()
+	if not review_car:
+		return jsonify({"state": 2})
+	if review_car.current_state != "待审核":
+		return jsonify({"state": 3})
+	else:
+		review_car.current_state = "出售中"
+		db.session.add(review_car)
+		db.session.commit()
+		return jsonify({"state": 0})
+
+@car.route('/review/reject', methods=['GET', 'POST'])
+def review_reject():
+	car_id = request.values.get('car_id')
+	if not car_id:
+		return jsonify({"state": 1})
+	review_car = Car.query.filter_by(car_id=car_id).first()
+	if not review_car:
+		return jsonify({"state": 2})
+	if review_car.current_state != "待审核":
+		return jsonify({"state": 3})
+	else:
+		review_car.current_state = "已拒绝"
+		db.session.add(review_car)
+		db.session.commit()
+		return jsonify({"state": 0})
+
+@car.route('/sale/list/')
+def review_list():
+	return render_template('car/sale.html', list=True)
+
+@car.route('/sale/details/<car_id>/')
+def review_detail(car_id):
+	if not car_id:
+		return render_template('404.html'), 404
+	form = ReviewCar()
+	result = Car.query.all()[0]
+	form.brand.data = result.brand
+	form.model.data = result.model
+	form.color.data = result.color
+	form.description.data = result.description
+	form.frame_number.data = result.frame_number
+	form.price.data = result.price
+	form.first_licensing_date.data = result.first_licensing_date
+	form.first_licensing_place.data = result.first_licensing_place
+	form.mileage.data = result.mileage
+	form.type_of_gearbox.data = result.type_of_gearbox
+	form.emission_standard.data = result.emission_standard
+	form.displacement.data = result.displacement
+	form.number_of_seats.data = result.number_of_seats
+	form.age_of_car.data = result.age_of_car
+	return render_template('car/review.html', list=False, form=form, current_state=result.current_state, car_id=result.id)
+
+@car.route('/sale/get_list/<list_type>/')
+def get_car(list_type):
+	if list_type == "on_sale":
+		result = Car.query.filter_by(current_state=u"出售中").all()
+	elif list_type == "sold":
+		result = Car.query.filter_by(current_state=u"已售出").all()
+	elif list_type == "delete":
+		result = Car.query.filter_by(current_state=u"已删除").all()
+	else:
+		return jsonify({'state': -1})
+	data = []
+	for item in result:
+		data.append({
+			'brand': item.brand,
+			'model': item.model,
+			'price': item.price,
+			'owner': u'一汽',
+			'phone': '1234567890',
+			'licensing_date': item.first_licensing_date.strftime("%Y-%m-%d"),
+			'submition_date': item.submition_date.strftime("%Y-%m-%d"),
+		})
+	json = {'total': len(result), 'rows': data}
+	return jsonify(json)
+
+

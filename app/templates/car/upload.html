@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "car/car_base.html" %}
 {% import "bootstrap/wtf.html" as wtf %} 
 {% block title %}上传车源{% endblock %}
 {% block head %} 
@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap-fileinput/4.3.6/css/fileinput.min.css">
 {% endblock %}
 {% block page_content %}
-<h1 class="page-header">上传</h1>
+<h1 class="page-header">上传车源</h1>
 <div class="col-md-6">
  {{ wtf.quick_form(form) }}
 </div>
@@ -35,5 +35,9 @@ function initFileInput(ctrlName) {
     initFileInput("registration_image");
     initFileInput("driving_image");
     initFileInput("frame_image");
+</script>
+<script>
+nav = document.getElementById("nav_upload");
+nav.setAttribute("class", "active");
 </script>
 {% endblock %}
