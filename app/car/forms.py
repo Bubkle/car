@@ -1,9 +1,10 @@
 # -*- coding:utf-8 -*-
 from flask_wtf import Form
-from wtforms import StringField, SelectField, SubmitField, DateField, FloatField, FileField, IntegerField
+from wtforms import StringField, SelectField, SubmitField, DateField, FloatField, FileField, IntegerField, HiddenField
 from wtforms.validators import Required, Length, Regexp
 
 class UploadCar(Form):
+	car_id = HiddenField("")
 	brand = SelectField(u'品牌', choices=[('bmw', 'bmw'), ('audi', 'audi'), ('toyota', 'toyota'),], validators=[Required(),])
 	model = StringField(u'型号', validators=[Required(), Length(1,64),])
 	color = SelectField(u'颜色', choices=[('red', 'red'), ('blue', 'blue'), ('yellow', 'yellow'),], validators=[Required(),])
@@ -18,10 +19,10 @@ class UploadCar(Form):
 	displacement = FloatField(u'排量', validators=[Required(),])
 	number_of_seats = IntegerField(u'座位数', validators=[Required(),])
 	age_of_car = IntegerField(u'车龄', validators=[Required(),])
-	car_image = FileField(u'车辆图片', render_kw={'multiple':'multiple',}, validators=[Required(),])
-	registration_image = FileField(u'机动车登记证', validators=[Required(),])
-	driving_image = FileField(u'行驶证', validators=[Required(),])
-	frame_image = FileField(u'车架码证', validators=[Required(),])
+	car_image = FileField(u'车辆图片', render_kw={'multiple':'multiple',}, validators=[])
+	registration_image = FileField(u'机动车登记证', validators=[])
+	driving_image = FileField(u'行驶证', validators=[])
+	frame_image = FileField(u'车架码证', validators=[])
 	submit = SubmitField(u'提交')
 
 class ReviewCar(Form):

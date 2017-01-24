@@ -57,23 +57,37 @@
 <script>
 $(function () {
 
-    //1.初始化Table
-    var oTable = new TableInit();
-    oTable.Init();
+   //初始化Table
+    var table_on_sale = new TableInit("tb_car_on_sale");
+    table_on_sale.Init();
 
-    //2.初始化Button的点击事件
-    var oButtonInit = new ButtonInit();
-    oButtonInit.Init();
+    var table_sold = new TableInit("tb_car_sold");
+    table_sold.Init();
+
+    var table_delete = new TableInit("tb_car_delete");
+    table_delete.Init();
+
 
 });
 
 
-var TableInit = function () {
+var TableInit = function (table_id) {
     var oTableInit = new Object();
+    table = document.getElementById(table_id);
     //初始化Table
     oTableInit.Init = function () {
-        $('#tb_car_on_sale').bootstrapTable({
-            url: '/car/review/get_car',                    //请求后台的URL（*）
+	var url = '/car/sale/get_list/on_sale';
+	var operateFormatter = operateFormatter_on_sale;
+	if(table_id === "tb_car_sold"){
+		url = '/car/sale/get_list/sold/';
+		operateFormatter = operateFormatter_sold;
+	}
+	else if(table_id === "tb_car_delete"){
+		url = '/car/sale/get_list/delete/';
+		operateFormatter = operateFormatter_delete;
+	}
+        $(table).bootstrapTable({
+            url: url,                           //请求后台的URL（*）
             method: 'get',                      //请求方式（*）
             toolbar: '#toolbar',                //工具按钮用哪个容器
             striped: true,                      //是否显示行间隔色
@@ -130,7 +144,7 @@ var TableInit = function () {
                 title: '操作',
                 align: 'center',
                 events: operateEvents,
-                formatter: operateFormatter
+                formatter: operateFormatter,
             },]
         });
     };
@@ -148,23 +162,44 @@ var TableInit = function () {
     return oTableInit;
 };
 
-function operateFormatter(value, row, index) {
+function operateFormatter_on_sale(value, row, index) {
         return [
-            '<a class="edit" href="javascript:void(0)" title="编辑信息">',
+            '<a class="edit" href="/car/sale/details/2/" title="编辑信息">',
             '编辑 | ',
             '</a>  ',
-            '<a class="sold" href="javascript:void(0)" title="置为已售">',
+            '<a class="sold" href="#" title="置为已售">',
             '已售 | ',
             '</a>',
-            '<a class="remove" href="javascript:void(0)" title="删除车辆">',
+            '<a class="remove" href="#" title="删除车辆">',
             '删除',
             '</a>'
 
         ].join('');
-    }
+};
 
-    window.operateEvents = {
-        'click .review': function (e, value, row, index) {
+function operateFormatter_sold(value, row, index) {
+        return [
+            '<a class="sale" href="/car/sale/details/0/" title="恢复在售">',
+            '在售 | ',
+            '</a>  ',
+            '<a class="remove" href="#" title="删除车辆">',
+            '删除',
+            '</a>'
+
+        ].join('');
+};
+
+function operateFormatter_delete(value, row, index) {
+        return [
+            '<a class="check" href="/car/sale/details/0/" title="查看车辆">',
+            '查看',
+            '</a>  ',
+        ].join('');
+};
+
+
+window.operateEvents = {
+        'click .sold': function (e, value, row, index) {
             alert('You click review action, row: ' + JSON.stringify(row));
         },
         'click .remove': function (e, value, row, index) {
@@ -173,7 +208,7 @@ function operateFormatter(value, row, index) {
                 values: [row.id]
             });
         }
-    };
+};
 </script>
 {% else %}
 <script src="//cdn.bootcss.com/bootstrap-fileinput/4.3.6/js/fileinput.min.js"></script>
@@ -199,9 +234,9 @@ function initFileInput(ctrlName) {
     initFileInput("driving_image");
     initFileInput("frame_image");
 </script>
+{% endif %}
 <script>
 nav = document.getElementById("nav_sale");
 nav.setAttribute("class", "active");
 </script>
-{% endif %}
 {% endblock %}

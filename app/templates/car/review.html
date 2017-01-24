@@ -35,7 +35,7 @@
 </div>
 {% else %}
 <ol class="breadcrumb">
-  <li><a href="#">审核列表</a></li>
+  <li><a href="/car/review/list/">审核列表</a></li>
   <li class="active">车辆</li>
 </ol>
 
@@ -113,6 +113,10 @@ var TableInit = function (table_id) {
             cardView: false,                    //是否显示详细视图
             detailView: false,                   //是否显示父子表
             columns: [{
+		field: 'id',
+		title: 'ID',
+		align: 'center',
+	    },{
                 field: 'brand',
                 title: '品牌',
 		align: 'center',
@@ -165,7 +169,7 @@ var TableInit = function (table_id) {
 
 function operateFormatter_review(value, row, index) {
         return [
-            '<a class="review" href="/car/review/details/0/" title="审核车辆信息">',
+            '<a class="review" href="/car/review/details/' + row.id + '/" title="审核车辆信息">',
             '审核',
             '</a>  ',
         ].join('');
@@ -173,7 +177,7 @@ function operateFormatter_review(value, row, index) {
 
 function operateFormatter_reject(value, row, index) {
         return [
-            '<a class="check" href="" title="查看车辆信息">',
+            '<a class="check" href="/car/review/details/' + row.id +  '/" title="查看车辆信息">',
             '查看',
             '</a>  ',
         ].join('');
@@ -240,7 +244,7 @@ var pass = function(car_id){
 
 $('#mymodal').on('hidden.bs.modal', function () {
    if(state === 0){
-	window.location.href = '/car/review/list'
+	window.location.href = '/car/review/list/'
    }
 })
 </script>

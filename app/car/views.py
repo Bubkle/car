@@ -31,6 +31,7 @@ def get_subfolder_path(folder_name):
 	return sub_folder
 
 def save_picture(car_image, driving_image, registration_image, frame_image, car_id):
+	return
 	picture_urls = []
 	for picture in car_image:
 		sub_folder = get_subfolder_path('tmp')
@@ -60,31 +61,44 @@ def dump_datetime(value):
         return None
     return value.strftime("%Y-%m-%d")
 
+def save_car(form, db, request, car_id=''):	
+	data = {}
+	if car_id:
+		old_car = Car.query.filter_by(id=int(car_id))
+		if not old_car:
+			return -1
+	data['brand'] = form.brand.data
+	data['model'] = form.model.data
+	data['color'] = form.color.data
+	data['description'] = form.description.data
+	data['frame_number'] = form.frame_number.data
+	data['price'] = form.price.data
+	data['first_licensing_date'] = form.first_licensing_date.data
+	data['first_licensing_place'] = form.first_licensing_place.data
+	data['mileage'] = form.mileage.data
+	data['type_of_gearbox'] = form.type_of_gearbox.data
+	data['emission_standard'] = form.emission_standard.data
+	data['displacement'] = form.displacement.data
+	data['number_of_seats'] = form.number_of_seats.data
+	data['age_of_car'] = form.age_of_car.data
+	data['current_state'] = u'出售中'
+	data['submition_date'] = datetime.date.today()
+	if old_car:
+		old_car.update(data)
+		db.session.commit()
+	else: 
+		new_car = Car(**data)
+		db.session.add(new_car)
+		db.session.commit()
+		car_id = new_car.id
+	save_picture(request.files.getlist('car_image'), request.files['driving_image'], request.files['registration_image'], request.files['frame_image'], car_id)
+	return 0
+
 @car.route('/upload/', methods=['GET', 'POST'])
 def upload():
 	form = UploadCar()
 	if form.validate_on_submit():
-		data = {}
-		data['brand'] = form.brand.data
-		data['model'] = form.model.data
-		data['color'] = form.color.data
-		data['description'] = form.description.data
-		data['frame_number'] = form.frame_number.data
-		data['price'] = form.price.data
-		data['first_licensing_date'] = form.first_licensing_date.data
-		data['first_licensing_place'] = form.first_licensing_place.data
-		data['mileage'] = form.mileage.data
-		data['type_of_gearbox'] = form.type_of_gearbox.data
-		data['emission_standard'] = form.emission_standard.data
-		data['displacement'] = form.displacement.data
-		data['number_of_seats'] = form.number_of_seats.data
-		data['age_of_car'] = form.age_of_car.data
-		data['current_state'] = u'待审核'
-		data['submition_date'] = datetime.date.today() 
-		new_car = Car(**data)
-		db.session.add(new_car)
-		db.session.commit()
-		save_picture(request.files.getlist('car_image'), request.files['driving_image'], request.files['registration_image'], request.files['frame_image'], new_car.id)
+		save_car(form, db, request)
 		flash(u'提交成功')
 		return redirect(url_for('.upload'))
 	return render_template('car/upload.html', form=form)
@@ -98,7 +112,11 @@ def review_detail(car_id):
 	if not car_id:
 		return render_template('404.html'), 404
 	form = ReviewCar()
-	result = Car.query.all()[0]
+	result = Car.query.filter_by(id=car_id).first()
+	if not result:
+		return render_template('404.html'), 404
+	if result.current_state not in ["待审核", "已拒绝"]:
+		return render_template('404.html'), 404
 	form.brand.data = result.brand
 	form.model.data = result.model
 	form.color.data = result.color
@@ -126,6 +144,7 @@ def get_car(list_type):
 	data = []
 	for item in result:
 		data.append({
+			'id': item.id,
 			'brand': item.brand,
 			'model': item.model,
 			'price': item.price,
@@ -137,28 +156,27 @@ def get_car(list_type):
 	json = {'total': len(result), 'rows': data}
 	return jsonify(json)
 
-@car.route('/review/pass', methods=['GET', 'POST'])
+@car.route('/review/pass/', methods=['GET', 'POST'])
 def review_pass():
 	car_id = request.values.get('car_id')
 	if not car_id:
 		return jsonify({"state": 1})
-	review_car = Car.query.filter_by(car_id=car_id).first()
+	review_car = Car.query.filter_by(id=car_id).first()
 	if not review_car:
 		return jsonify({"state": 2})
 	if review_car.current_state != "待审核":
 		return jsonify({"state": 3})
 	else:
 		review_car.current_state = "出售中"
-		db.session.add(review_car)
 		db.session.commit()
 		return jsonify({"state": 0})
 
-@car.route('/review/reject', methods=['GET', 'POST'])
+@car.route('/review/reject/', methods=['GET', 'POST'])
 def review_reject():
 	car_id = request.values.get('car_id')
 	if not car_id:
 		return jsonify({"state": 1})
-	review_car = Car.query.filter_by(car_id=car_id).first()
+	review_car = Car.query.filter_by(id=car_id).first()
 	if not review_car:
 		return jsonify({"state": 2})
 	if review_car.current_state != "待审核":
@@ -170,15 +188,25 @@ def review_reject():
 		return jsonify({"state": 0})
 
 @car.route('/sale/list/')
-def review_list():
+def sale_list():
 	return render_template('car/sale.html', list=True)
 
-@car.route('/sale/details/<car_id>/')
-def review_detail(car_id):
-	if not car_id:
+@car.route('/sale/details/<car_id>/', methods=["GET", "POST"])
+def sale_detail(car_id):
+	result = Car.query.filter_by(id=int(car_id)).first()
+	if not result:
 		return render_template('404.html'), 404
-	form = ReviewCar()
-	result = Car.query.all()[0]
+	if result.current_state == u"出售中":
+		form = UploadCar()
+		if form.validate_on_submit():
+			save_car(form, db, request, form.car_id.data)
+			flash(u"修改成功")
+			return redirect(url_for('.sale_list'))
+	elif result.current_state == u"已删除":
+		form = ReviewCar()
+	else:
+		return render_template('404.html'), 404
+	form.car_id.data = result.id
 	form.brand.data = result.brand
 	form.model.data = result.model
 	form.color.data = result.color
@@ -193,10 +221,10 @@ def review_detail(car_id):
 	form.displacement.data = result.displacement
 	form.number_of_seats.data = result.number_of_seats
 	form.age_of_car.data = result.age_of_car
-	return render_template('car/review.html', list=False, form=form, current_state=result.current_state, car_id=result.id)
+	return render_template('car/sale.html', list=False, form=form, current_state=result.current_state, car_id=result.id)
 
 @car.route('/sale/get_list/<list_type>/')
-def get_car(list_type):
+def sale_car(list_type):
 	if list_type == "on_sale":
 		result = Car.query.filter_by(current_state=u"出售中").all()
 	elif list_type == "sold":
@@ -219,4 +247,33 @@ def get_car(list_type):
 	json = {'total': len(result), 'rows': data}
 	return jsonify(json)
 
+@car.route('sale/on_sale/')
+def sale_on_sale():
+	car_id = request.values.get('car_id')
+	if not car_id:
+		return jsonify({"state": 1})
+	sale_car = Car.query.filter_by(id=car_id).first()
+	if not sale_car:
+		return jsonify({"state": 2})
+	if sale_car.current_state != "已售出":
+		return jsonify({"state": 3})
+	else:
+		review_car.current_state = "出售中"
+		db.session.commit()
+		return jsonify({"state": 0})
+
+@car.route('sale/delete')
+def sale_delete():
+	car_id = request.values.get('car_id')
+	if not car_id:
+		return jsonify({"state": 1})
+	sale_car = Car.query.filter_by(id=car_id).first()
+	if not sale_car:
+		return jsonify({"state": 2})
+	if sale_car.current_state not in ["已售出", "出售中"]:
+		return jsonify({"state": 3})
+	else:
+		review_car.current_state = "已删除"
+		db.session.commit()
+		return jsonify({"state": 0})
 
