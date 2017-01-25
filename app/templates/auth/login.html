@@ -1,12 +1,31 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %} 
-{% block title %}Flasky - Login{% endblock %} 
-{% block page_content %}
-<div class="page-header">
-	<h1>Login</h1>
-</div>
-<div class="col-md-4">
-	{{ wtf.quick_form(form) }}
-</div>
-{% endblock %}
+{% block title %}登录系统{% endblock %} 
+{% block content %}
+<div class="container">
+   
+     {% for message in get_flashed_messages() %}
+     <div class="alert alert-warning">
+          <button type="button" class="close" data-dismiss="alert">&times;</button>
+         	{{ message }}	
+     </div>
+     {% endfor %}
 
+     <div class="col-md-4" style="float:none; display:block; margin-left:auto; margin-right:auto;">
+          <form class="form-signin" method="POST">
+	  {{ form.hidden_tag()}}
+          <h2 class="form-signin-heading"><center>登录</center></h2>
+          <label for="login_name" class="sr-only">用户名</label>
+   	  {{ form.login_name(class="form-control", placeholder="用户名",) }}
+          <label for="password" class="sr-only">密码</label>
+	  {{ form.password(class="form-control", placeholder="密码") }}
+          <div class="checkbox">
+               <label>
+               {{ form.remember_me() }}记住我
+               </label>
+          </div>
+	  {{ form.submit(class="btn btn-lg btn-primary btn-block") }}
+          </form>
+     </div>
+</div> <!-- /container -->
+{% endblock %}

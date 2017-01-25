@@ -8,6 +8,7 @@ from ..models import Car, Pictures
 from .forms import UploadCar, ReviewCar
 from flask_uploads import UploadSet, IMAGES
 from wtforms import SubmitField
+from flask_login import login_required
 import time
 import datetime
 import random
@@ -97,6 +98,7 @@ def save_car(form, db, request, car_id=''):
 	return 0
 
 @car.route('/upload/', methods=['GET', 'POST'])
+@login_required
 def upload():
 	form = UploadCar()
 	if form.validate_on_submit():
@@ -136,11 +138,13 @@ def review_detail(car_id):
 	return render_template('car/review.html', list=False, form=form, current_state=result.current_state, car_id=result.id)
 
 @car.route('/review/get_list/<list_type>/')
-def get_car(list_type):
+def get_review_car(list_type):
+	limit = int(request.values.get('limit', '10'))
+	offset = int(request.values.get('offset', '0'))
 	if list_type == "review":
-		result = Car.query.filter_by(current_state=u"待审核").all()
+		result = Car.query.filter_by(current_state=u"待审核").paginate(offset+1, limit, False).items
 	elif list_type == "reject":
-		result = Car.query.filter_by(current_state=u"已拒绝").all()
+		result = Car.query.filter_by(current_state=u"已拒绝").paginate(offset+1, limit, False).items
 	else:
 		return jsonify({'state': -1})
 	data = []
@@ -226,13 +230,15 @@ def sale_detail(car_id):
 	return render_template('car/sale.html', list=False, form=form, current_state=result.current_state, car_id=result.id)
 
 @car.route('/sale/get_list/<list_type>/')
-def sale_car(list_type):
+def get_sale_car(list_type):
+	limit = int(request.values.get('limit', '10'))
+	offset = int(request.values.get('offset', '0'))
 	if list_type == "on_sale":
-		result = Car.query.filter_by(current_state=u"出售中").all()
+		result = Car.query.filter_by(current_state=u"出售中").paginate(offset+1, limit, False).items
 	elif list_type == "sold":
-		result = Car.query.filter_by(current_state=u"已售出").all()
+		result = Car.query.filter_by(current_state=u"已售出").paginate(offset+1, limit, False).items
 	elif list_type == "delete":
-		result = Car.query.filter_by(current_state=u"已删除").all()
+		result = Car.query.filter_by(current_state=u"已删除").paginate(offset+1, limit, False).items
 	else:
 		return jsonify({'state': -1})
 	data = []
@@ -261,7 +267,7 @@ def sale_on_sale():
 	if sale_car.current_state != u"已售出":
 		return jsonify({"state": 3})
 	else:
-		review_car.current_state = u"出售中"
+		sale_car.current_state = u"出售中"
 		db.session.commit()
 		return jsonify({"state": 0})
 
@@ -276,7 +282,7 @@ def sale_delete():
 	if sale_car.current_state not in [u"已售出", u"出售中"]:
 		return jsonify({"state": 3})
 	else:
-		review_car.current_state = u"已删除"
+		sale_car.current_state = u"已删除"
 		db.session.commit()
 		return jsonify({"state": 0})
 

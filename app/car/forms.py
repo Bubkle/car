@@ -26,6 +26,7 @@ class UploadCar(Form):
 	submit = SubmitField(u'提交')
 
 class ReviewCar(Form):
+	car_id = HiddenField("")
 	brand = StringField(u'品牌', validators=[Required(),], render_kw={'disabled': 'true',},)
 	model = StringField(u'型号', validators=[Required(), Length(1,64),], render_kw={'disabled': 'true',},)
 	color = StringField(u'颜色', validators=[Required(),], render_kw={'disabled': 'true',},)

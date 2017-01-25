@@ -48,7 +48,7 @@
 	{{ wtf.quick_form(form) }}
 </div>
 {% endif %}
-{% endblock %}
+
 <div id="mymodal" class="modal fade bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
@@ -62,6 +62,7 @@
   </div>
 </div>
 
+{% endblock %}
 {% block scripts  %}
 {{ super() }}
 {% if list %}
@@ -187,7 +188,7 @@ function operateFormatter_on_sale(value, row, index) {
             '<a class="sold" href="#" title="置为已售">',
             '已售 | ',
             '</a>',
-            '<a class="remove" href="#" title="删除车辆">',
+            '<a class="delete" href="#" title="删除车辆">',
             '删除',
             '</a>'
 
@@ -196,10 +197,10 @@ function operateFormatter_on_sale(value, row, index) {
 
 function operateFormatter_sold(value, row, index) {
         return [
-            '<a class="sale" href="/car/sale/details/0/" title="恢复在售">',
+            '<a class="sale" href="#" title="恢复在售">',
             '在售 | ',
             '</a>  ',
-            '<a class="remove" href="#" title="删除车辆">',
+            '<a class="delete" href="#" title="删除车辆">',
             '删除',
             '</a>'
 
@@ -208,7 +209,7 @@ function operateFormatter_sold(value, row, index) {
 
 function operateFormatter_delete(value, row, index) {
         return [
-            '<a class="check" href="/car/sale/details/0/" title="查看车辆">',
+            '<a class="check" href="/car/sale/details/' + row.car_id + '/" title="查看车辆">',
             '查看',
             '</a>  ',
         ].join('');
@@ -235,17 +236,58 @@ window.operateEvents = {
 	            }
 	        });    
         },
-        'click .remove': function (e, value, row, index) {
-            $table.bootstrapTable('remove', {
-                field: 'id',
-                values: [row.id]
-            });
+        'click .delete': function (e, value, row, index) {
+        	$.ajax({
+	            url: "/car/sale/delete/",
+        	    data: {"car_id": row.car_id},
+	            type: "POST",
+        	    dataType:"text",
+	            success: function(data) {
+        	        json = eval("("+data+")");
+			state = json.state;
+        	        if(json.state === 0){
+                	    $('#mymodal').modal();
+	                }
+			else{
+			   alert("失败");
+			}
+	            }
+	        });    
+		
+        },
+        'click .sale': function (e, value, row, index) {
+        	$.ajax({
+	            url: "/car/sale/on_sale/",
+        	    data: {"car_id": row.car_id},
+	            type: "POST",
+        	    dataType:"text",
+	            success: function(data) {
+        	        json = eval("("+data+")");
+			state = json.state;
+        	        if(json.state === 0){
+                	    $('#mymodal').modal();
+	                }
+			else{
+			   alert("失败");
+			}
+	            }
+	        });    
+		
         }
+	
 };
 
 $('#mymodal').on('hidden.bs.modal', function () {
    if(state === 0){
-	window.location.href = '/car/sale/list/'
+	//window.location.href = '/car/sale/list/';
+	refresh_bt = $("button[name='refresh']");
+	toggle_bt = $("button[name='toggle']");
+	for(bt in refresh_bt){
+		$(bt).trigger("click");
+	}
+	for(bt in toggle_bt){
+		$(bt).trigger("click");
+	}
    }
 })
 
